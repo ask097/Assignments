@@ -1,0 +1,61 @@
+---
+title: "Assignment 6"
+author: "Andreas Reiten Skundberg"
+date: "12 10 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+library(rvest)
+library(tidyverse)
+library(lubridate)
+library(dplyr)
+```
+
+## Bankruptsies during Covid-19 Pandemic
+
+
+
+```{r cars}
+url19 <-("https://w2.brreg.no/kunngjoring/kombisok.jsp?datoFra=01.01.2019&datoTil=31.12.2019&id_region=0&id_niva1=51&id_niva2=56&id_bransje1=0&fbclid=IwAR2f0gTOEe21PJ7vqNFvWjctfHTPkQkeqyUYBab5Y2Tq1qjEHObA-ZvpFCg")
+
+url20 <- ("https://w2.brreg.no/kunngjoring/kombisok.jsp?datoFra=01.01.2020&datoTil=31.12.2020&id_region=0&id_niva1=51&id_niva2=56&id_bransje1=0&fbclid=IwAR2isPi4DW_fPzoa6KDBgin5fx7QLMV1jtrieZd6VbzQZBkM0LZ_eBDg1CI")
+
+## 2019
+Konkurs2019 <-url19 %>% 
+  read_html() %>%
+  html_nodes(xpath = "//table") %>%
+  html_nodes("table") %>% 
+  html_table() %>% . [[1]] 
+
+## 2020
+Konkurs2020 <-url20 %>% 
+  read_html() %>%
+  html_nodes(xpath = "//table") %>%
+  html_nodes("table") %>% 
+  html_table() %>% . [[1]] 
+
+# Combining 2019 and 2020
+
+CombKonk <- bind_rows(Konkurs2019, Konkurs2020)                # Combining 2019 and 2020
+CombKonk <- CombKonk %>%
+  select(X2, X4, X6, X8) %>%                                   
+  mutate(Fylke =ifelse(grepl("[A-z]", X4), X4, NA)) %>%        # Creating a column for region 
+  fill(Fylke) %>%                                              # Filling with region name
+  filter(X4>=800000) %>%              # Filtering out persons by excluding values exceeding 800 000
+  filter(X2 != Fylke, X2 != X8) %>%                   # Restructuring dataset by clearing empty rows
+  mutate(X6 = dmy(X6)) %>%                            # Mutating variable into date
+  rename("Company" = X2, "Org.Num" = X4, "Date" = X6, "Type" = X8) # Renaming the colums
+```
+
+##Plots
+
+
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+
