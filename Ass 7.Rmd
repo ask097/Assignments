@@ -1,0 +1,128 @@
+---
+title: "Assignment 7 - US Births"
+author: "Andreas Reiten Skundberg"
+date: "27 10 2020"
+output: html_document
+---
+
+# Born In The USA
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(readr)
+```
+
+Created in collaboration with Alf-Henrik Heggelund & Fredrik Sverre Nilssen
+
+```{r}
+
+```
+
+
+The data is provided by [the CDC](https://www.cdc.gov/nchs/data_access/vitalstatsonline.htm) which gives all the births in the US in the years 2017-2019. The CDC also includes a detailed user guide to help navigate the data.
+
+![](https://rockthedesert.typepad.com/.a/6a00d8341cb2b653ef00e55386ed268833-pi)
+
+
+##### Loading and Restructuring data
+```{r}
+Births2017<- read.csv("Birth2017")
+Births2018<- read.csv("Births2018")
+Births2019<- read.csv("Births2019")
+
+Births2017 <- Births2017 %>% mutate(Year=2017)
+Births2018 <- Births2018 %>% mutate(Year=2018)
+Births2019 <- Births2019 %>% mutate(Year=2019)
+
+# Adding all the births to a combined dateset
+
+All_Births <- bind_rows(Births2017, Births2018, Births2019)
+
+# Changing values to numeric
+
+All_Births$Birth.Weight <- as.numeric(All_Births$Birth.Weight)
+All_Births$Birth.Month <- as.numeric(All_Births$Birth.Month)
+All_Births$Birthday.of.Week <- as.numeric(All_Births$Birthday.of.Week)
+
+```
+
+### Proportion of Boys to Girls Born in 2017-2019
+
+
+```{r}
+All_Births1 <- All_Births %>%
+ group_by(Year,Sex.of.Infant) %>%
+  mutate(count=row_number()) %>%
+  filter(count==max(count)) 
+
+
+
+ggplot(All_Births1, aes(x = Sex.of.Infant, y = count, fill = Sex.of.Infant)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~Year) + 
+  ylab(expression("Number of Births")) + 
+  xlab(expression("Year")) + 
+  labs(title = "Proportion of Boys to Girls Each Year")
+
+  
+```
+
+##### Dataset 
+
+The dataset shows the total number of births by each year and gender. Shown in the count column
+
+```{r}
+All_Births1
+```
+
+
+### Average Birthweight In Grams By Gender
+
+```{r}
+Avg <- All_Births %>%
+  group_by(Year,Sex.of.Infant) %>%
+  summarise(avgWeight = mean(Birth.Weight))
+
+
+# Plot
+ggplot(Avg, aes(x = Year, y = avgWeight, color= Sex.of.Infant)) + 
+  geom_line() + 
+  ylab(expression("Weight")) +
+  xlab("Year") +
+  labs(title = "Average Birthweight by gender")
+
+```
+
+##### Dataset 
+
+The data shows the average weight of newborns in grams by each year and gender. 
+Shown in the avgWeight column. 
+
+```{r}
+Avg
+```
+
+### Proportion of Boys to Girls By Day of Week
+
+```{r}
+#3 The proportion of boys to girls by day of birth.
+
+All_Births2 <- All_Births %>%
+  group_by(Year,Birthday.of.Week,Sex.of.Infant) %>%
+  mutate(count=row_number()) %>%
+  filter(count==max(count)) 
+
+# Plot
+ggplot(All_Births2, aes(x = Birthday.of.Week, y = count, fill = Sex.of.Infant, color = Sex.of.Infant)) +
+  geom_line(stat = "identity") + 
+  ylab(expression("Number of Births")) +
+  labs(title = "Proportion of Boys to Girls By Day of Week") +
+  facet_wrap(~Year)
+```
+
+
+
+
